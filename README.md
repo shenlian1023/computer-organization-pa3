@@ -4,7 +4,11 @@ Three NCKU computer-organization exercises: track cache accesses with pseudo-LRU
 
 `C` · `C++` · `PLRU` · `RISC-V Vector` · `Spike`
 
-[Results](#results-and-implementation-at-a-glance) · [Vector kernel](#how-the-vector-kernel-works) · [Implementation notes](docs/implementation.md) · [Run](#run-the-remaining-parts) · [Benchmark record](docs/benchmarks/README.md)
+[Results](#results-and-implementation-at-a-glance) · [Implementation](#implementation) · [Run](#run-the-remaining-parts) · [Benchmark record](docs/benchmarks/README.md)
+
+![Independent PA3 exercises and four-row RVV data reuse](assets/method-overview.png)
+
+The upper panel separates the three exercises. The lower panel follows one loaded B vector into four output-row accumulators. [Figure sources and scope](docs/method-overview-illustrated.md).
 
 ## Results and implementation at a glance
 
@@ -20,15 +24,9 @@ All three parts were checked on **2026-09-29** in an isolated copy inside the co
 
 The **40.38×** ratio compares instruction-counter values plus an assumed memory cost from the course judge. It is not a hardware wall-clock speedup. The result covers one MLP case; the transpose comparison covers the two matrix sizes shown above.
 
-## How the vector kernel works
+## Implementation
 
-```mermaid
-flowchart LR
-    A[Load a vector from matrix B] --> B[Reuse across four output rows]
-    B --> C[RVV multiply-accumulate]
-    C --> D[Store output vectors]
-    D --> E[Process remaining output rows]
-```
+### Reuse a B vector across four output rows
 
 [matmul_improved.c](3_mlp/matmul_improved.c) uses RVV `e32m4` vectors. Processing four rows together reuses each loaded B vector across four accumulators, rather than treating each row as a separate pass. The code also handles rows left over after the four-row groups.
 
@@ -47,6 +45,34 @@ for(int k=0;k<K;k++){
 The implementation exercises memory-locality reasoning, register reuse, and vector tail handling. The [implementation notes](docs/implementation.md) trace these choices, the transpose staging, and the PLRU tree back to the source. The recorded improvement combines those design choices with the compiler and course cost model; no ablation isolates an individual optimization's contribution.
 
 The assignment's [judge](3_mlp/judge.py) compares MLP output with the [scalar baseline](3_mlp/matmul_naive.c), then scores simulator-derived overhead. The recorded comparison covers one MLP input case, not a range of model sizes.
+
+### Stage a transpose tile in the destination
+
+In [snippet.c](2_transpose/snippet.c), the off-diagonal 64 × 64 path divides an 8 × 8 tile into four quadrants. After loading eight adjacent A values, it writes the first half to its transposed positions and temporarily places the second half in B:
+
+```c
+B[j][k] = t0, B[j + 1][k] = t1, B[j + 2][k] = t2, B[j + 3][k] = t3;
+B[j][k + 4] = t4, B[j + 1][k + 4] = t5, B[j + 2][k + 4] = t6, B[j + 3][k + 4] = t7;
+```
+
+The next loop retrieves those staged values before replacing them with the remaining source rows. Reordering the reads and writes reduces conflict misses under the course cache configuration, without a separate heap buffer. Diagonal tiles use a separate copy-and-swap path. These paths target the bundled 32 × 32 and 64 × 64 dimensions.
+
+### Represent replacement state with a tree
+
+The [PLRU hit update](1_cachesim/cachesim.cc) walks from a touched way toward the tree root:
+
+```cpp
+size_t node = way + ways -1;
+while(node != 0){
+  size_t parent = (node-1)>>1;
+  plru_bits[idx*(ways-1)+parent]=(node == parent*2+1)?1:0;
+  node = parent;
+}
+```
+
+Each bit points toward the subtree opposite the recent access. Victim selection follows those bits to a leaf. This stores W−1 bits per set for W ways and gives tree maintenance a logarithmic path length; tag lookup still scans ways linearly. Valid and dirty tags separately determine fetches and writebacks. PLRU approximates recency, rather than maintaining exact LRU order.
+
+The exercises connect cache-locality analysis, vector register reuse, and state representation to correctness checks and explicit performance counters. The [extended notes](docs/implementation.md) cover register-pressure tradeoffs, tail handling, and replacement-policy limits.
 
 ## Cache simulator
 
