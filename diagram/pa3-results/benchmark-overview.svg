@@ -1,0 +1,49 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1000 460" role="img" aria-labelledby="title desc">
+  <title id="title">PA3 reproduced benchmark results</title>
+  <desc id="desc">Transpose cache misses decrease from 1152 to 272 for 32 by 32 and from 4608 to 1288 for 64 by 64. MLP modeled total overhead decreases from 3317559320 to 82148934, a baseline-to-improved ratio of 40.38. These are archived course-harness results, not hardware timings.</desc>
+  <style>
+    text {font-family:Arial,Helvetica,sans-serif;fill:#202c39}
+    .heading {font-size:18px;font-weight:600}
+    .label {font-size:13px}
+    .note {font-size:12px;fill:#647080}
+    .value {font-family:Consolas,monospace;font-size:13px}
+    .baseline {fill:#b7c0ca}
+    .improved {fill:#456b86}
+    .guide {stroke:#e1e6ec;stroke-width:1}
+  </style>
+  <rect width="1000" height="460" fill="#fff"/>
+  <text x="35" y="38" font-size="22" font-weight="600">PA3: locality and vector reuse</text>
+  <text x="35" y="62" class="note">Reproduced course-harness output · lower is better · correctness checks passed</text>
+  <line x1="35" y1="83" x2="965" y2="83" class="guide"/>
+  <text x="35" y="117" class="heading">(a) Transpose cache misses</text>
+  <text x="535" y="117" class="heading">(b) MLP modeled total overhead</text>
+  <text x="35" y="143" class="note">Each case uses its own baseline-normalized scale.</text>
+  <text x="535" y="143" class="note">Instruction counter + course memory-cost estimate</text>
+  <text x="35" y="186" class="label">32 × 32</text>
+  <rect x="125" y="167" width="250" height="18" class="baseline"/>
+  <text x="386" y="181" class="value">1,152</text>
+  <rect x="125" y="198" width="59.0278" height="18" class="improved"/>
+  <text x="196" y="212" class="value">272</text>
+  <text x="125" y="237" class="note">76.39% fewer misses</text>
+  <text x="35" y="282" class="label">64 × 64</text>
+  <rect x="125" y="263" width="250" height="18" class="baseline"/>
+  <text x="386" y="277" class="value">4,608</text>
+  <rect x="125" y="294" width="69.8785" height="18" class="improved"/>
+  <text x="207" y="308" class="value">1,288</text>
+  <text x="125" y="333" class="note">72.05% fewer misses</text>
+  <text x="535" y="184" class="label">Baseline</text>
+  <rect x="620" y="166" width="240" height="18" class="baseline"/>
+  <text x="620" y="211" class="value">3,317,559,320 model units</text>
+  <text x="535" y="253" class="label">Improved</text>
+  <rect x="620" y="235" width="5.9428" height="18" class="improved"/>
+  <text x="640" y="250" class="value">82,148,934</text>
+  <text x="620" y="300" font-size="29" font-weight="600" fill="#456b86">40.38×</text>
+  <text x="620" y="324" class="note">baseline / improved modeled overhead</text>
+  <line x1="495" y1="108" x2="495" y2="349" class="guide"/>
+  <rect x="35" y="371" width="14" height="12" class="baseline"/>
+  <text x="58" y="382" class="note">Baseline</text>
+  <rect x="160" y="371" width="14" height="12" class="improved"/>
+  <text x="183" y="382" class="note">Improved</text>
+  <text x="35" y="415" class="note">MLP max absolute output difference: 7.629e-06. Results cover 2 transpose cases and 1 MLP case.</text>
+  <text x="35" y="436" class="note">The 40.38× ratio is not hardware wall-clock speedup. See the benchmark record for the model and source limits.</text>
+</svg>

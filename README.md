@@ -1,18 +1,24 @@
 # Cache simulation and RISC-V vector matrix computation
 
-Three NCKU computer-organization exercises: track cache accesses with pseudo-LRU replacement, transpose matrices, and vectorize matrix multiplication used in MLP inference. The vector implementation processes four output rows together to reuse loaded values from matrix B.
+Three NCKU computer-organization exercises: track cache accesses with pseudo-LRU replacement, reduce transpose misses with cache-aware blocking, and vectorize matrix multiplication used in MLP inference. The vector implementation processes four output rows together to reuse loaded values from matrix B.
 
 `C` · `C++` · `PLRU` · `RISC-V Vector` · `Spike`
+
+[Results](#results-and-implementation-at-a-glance) · [Vector kernel](#how-the-vector-kernel-works) · [Run](#run-the-remaining-parts) · [Benchmark record](docs/benchmarks/README.md)
 
 ## Results and implementation at a glance
 
 | Part | What this snapshot implements | Available evidence |
 | --- | --- | --- |
-| Cache simulation | Tree-based PLRU, valid/dirty tags, hit/miss and write-back accounting | Local course judge: **3 PASS, 0 WA, 0 ERR**, recorded on 2026-09-28 |
-| Matrix transpose | Direct nested-loop transpose | [Implementation](2_transpose/snippet.c); not a cache-blocked version |
-| MLP matrix multiplication | RVV floating-point multiply-accumulate, four-row blocking, and tail handling | [Vector implementation](3_mlp/matmul_improved.c) and [scalar baseline](3_mlp/matmul_naive.c) |
+| Cache simulation | Tree-based PLRU, valid/dirty tags, hit/miss and write-back accounting | Course judge: **3 PASS, 0 WA, 0 ERR** |
+| Matrix transpose | 8 × 8 blocking, diagonal-tile handling, and 4 × 4 staging within off-diagonal 64 × 64 tiles | 32 × 32 misses **1,152 to 272**; 64 × 64 misses **4,608 to 1,288**, both outputs passed |
+| MLP matrix multiplication | RVV floating-point multiply-accumulate, four-row blocking, and tail handling | **40.38× baseline/improved modeled total overhead**, output passed; maximum absolute difference `7.629e-06` |
 
-The cache result covers the three bundled traces on Ubuntu 22.04 under WSL. The RVV/MLP tests have not been rerun for this snapshot. A speedup ratio is not yet reported: it needs paired measurements under the same inputs, compiler flags, simulator configuration, and correctness tolerance.
+![Reproduced transpose miss counts and MLP modeled overhead comparison](diagram/pa3-results/benchmark-overview.svg)
+
+All three parts were checked on **2026-09-29** in an isolated copy inside the course container, `asrlab/comp-org:pa3`. The transpose and MLP values match the author's [archived terminal record](docs/benchmarks/pa3-reported-run.txt). The [benchmark notes](docs/benchmarks/README.md) record the environment, commands, source fingerprints, and scope.
+
+The **40.38×** ratio compares instruction-counter values plus an assumed memory cost from the course judge. It is not a hardware wall-clock speedup. The result covers one MLP case; the transpose comparison covers the two matrix sizes shown above.
 
 ## How the vector kernel works
 
@@ -26,7 +32,7 @@ flowchart LR
 
 [matmul_improved.c](3_mlp/matmul_improved.c) uses RVV `e32m4` vectors. Processing four rows together reuses each loaded B vector across four accumulators, rather than treating each row as a separate pass. The code also handles rows left over after the four-row groups.
 
-The assignment's [judge](3_mlp/judge.py) checks MLP output against reference values and uses simulator measurements for scoring. Those measurements are not hardware wall-clock timings.
+The assignment's [judge](3_mlp/judge.py) compares MLP output with the [scalar baseline](3_mlp/matmul_naive.c), then scores simulator-derived overhead. The recorded comparison covers one MLP input case, not a range of model sizes.
 
 ## Cache simulator
 
@@ -44,7 +50,15 @@ Read the judge's PASS, WA, and ERR summary. Its exit status alone does not relia
 
 ## Run the remaining parts
 
-The transpose harness is in [2_transpose](2_transpose). Its Makefile builds the drivers with `make all` and runs the bundled cases with `make judge-all`.
+The [transpose implementation](2_transpose/snippet.c) works in 8 × 8 tiles. Diagonal tiles transpose staged values in place; off-diagonal 64 × 64 tiles use 4 × 4 staging to reduce conflict misses. This implementation targets the assignment's 32 × 32 and 64 × 64 cases, not arbitrary matrix sizes.
+
+The harness needs Linux, GCC, Python 3, Git, and Valgrind with Lackey:
+
+```bash
+cd 2_transpose
+make all
+make judge-all
+```
 
 The MLP harness needs the course RISC-V environment: `riscv64-unknown-linux-gnu-gcc`, Spike, and the `RISCV` environment variable. It does not run as a normal x86 executable. The course container image is `asrlab/comp-org:pa3`.
 

@@ -1,0 +1,64 @@
+Source: archived terminal output supplied by the project author on 2026-09-29.
+The original run date, toolchain versions and source commit were not recorded in this excerpt.
+The shell prompt was omitted.
+
+= = = = = = = = = = 1 = = = = = = = = = =
+[PASS] input/0_S4_W2_B16.in
+[PASS] input/1_S8_W2_B16.in
+[PASS] input/2_S4_W4_B16.in
+
+===== Summary =====
+PASS   : 3
+WA     : 0
+ERR    : 0
+SCORE  : 60
+
+= = = = = = = = = = 2 = = = = = = = = = =
+[PASS] input/32_0.in,
+ [NAIVE] misses=1152, [IMPROVED] misses=272, score=24.17
+[PASS] input/64_0.in,
+ [NAIVE] misses=4608, [IMPROVED] misses=1288, score=19.52
+
+===== Summary =====
+PASS   : 2
+WA     : 0
+ERR    : 0
+SCORE  : 43.69
+
+= = = = = = = = = = 3 = = = = = = = = = =
+===== Original version =====
+inst. cycles: 214406689
+D$ Bytes Read:            249957239
+D$ Bytes Written:         2538863
+D$ Read Accesses:         61809092
+D$ Write Accesses:        371231
+D$ Read Misses:           30644599
+D$ Write Misses:          72293
+D$ Writebacks:            81034
+D$ Miss Rate:             49.400%
+Memory subsystem access overhead = 3103152631 (cpu cycle)
+Instruction cycles = 214406689 (cpu cycle)
+-----------------------------------
+===== Improved version =====
+inst. cycles: 7816464
+D$ Bytes Read:            44169939
+D$ Bytes Written:         2524619
+D$ Read Accesses:         10367266
+D$ Write Accesses:        369188
+D$ Read Misses:           609150
+D$ Write Misses:          33234
+D$ Writebacks:            41947
+D$ Miss Rate:             5.983%
+Memory subsystem access overhead = 74332470 (cpu cycle)
+Instruction cycles = 7816464 (cpu cycle)
+-----------------------------------
+Output Correctness: Pass
+max_abs_err = 7.629e-06
+memory access overhead improved ratio:  41.746932814152416
+total overhead improved ratio:  40.38469105393382
+
+===== Summary =====
+PASS   : 1
+WA     : 0
+ERR    : 0
+SCORE  : 10
